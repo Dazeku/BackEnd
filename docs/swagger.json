@@ -1,0 +1,2735 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "1.0.0",
+        "title": "Dazeku API",
+        "description": "API per la gestione della webapp Dazeku",
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        }
+    },
+    "host": "dazeku.onrender.com",
+    "basePath": "/",
+    "tags": [
+        {
+            "name": "user",
+            "description": "L'API permette di: registrare, recuperare dall'id, recuperare dallo username, modificare, eliminare, aggiungere ai preferiti e rimuovere dai preferiti gli utenti"
+        },
+        {
+            "name": "auth",
+            "description": "L'API permette di autenticarsi"
+        },
+        {
+            "name": "opera",
+            "description": "L'API permette di creare, modificare, eliminare e recuperare un'opera"
+        },
+        {
+            "name": "capitolo",
+            "description": "L'API permette di creare, modificare, eliminare e recuperare un capitolo"
+        },
+        {
+            "name": "checkEmail",
+            "description": "L'API permette di verificare il token inviato all'utente via mail per confermare che lo stesso abbia accesso a quella casella di posta elettronica"
+        }
+    ],
+    "schemes": ["https", "http"],
+    "consumes": ["application/json"],
+    "produces": ["application/json"],
+    
+    "paths": {
+        "/api/user": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "cookie",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "summary": "Recupera un utente dall'id, il token come parametro nella query è necessario solo se si ha un token per autenticarsi come l'utente di cui si vogliono vedere i dati (permette di visualizzare le opere con visibilità privata) e il token non è stato salvato come cookie.",
+                "responses": {
+                    "200": {
+                        "description": "E' stato trovato l'utente associato all'id passato come parametro e non sono avvenuti errori",                        
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                              "success": {
+                                "type": "boolean"
+                              },
+                              "data": {
+                                "$ref": "#/definitions/User"
+                              }
+                            },
+                            "required": ["success", "data"]                            
+                        }
+                    },
+                    "400": {
+                        "description": "Parametro id non specificato",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                              "success": {
+                                "type": "boolean"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["success", "message"]
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "query error"
+                            }
+                        }
+                        
+                    },
+                    "404": {
+                        "description": "L'utente non esiste",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                              "success": {
+                                "type": "boolean"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["success", "message"]
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "l'utente non esiste"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Il parametro id deve essere una stringa di 12 bytes",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                              "success": {
+                                "type": "boolean"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["success", "message"]
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "L'id deve essere una stringa di 12 bytes o un intero"
+                            }
+                        }
+                        
+                    },
+                    "500": {
+                        "description": "Il server non è riuscito a recuperare i dati dell'utente",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                              "success": {
+                                "type": "boolean"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["success", "message"]
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "E' avvenuto un errore nel tentativo di recuperare i dati dell'utente"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "user"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "datatomodify",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "username": {
+                                    "type": "string"
+                                },
+                                "nome": {
+                                    "type": "string"
+                                },
+                                "cognome": {
+                                    "type": "string"
+                                },
+                                "password": {
+                                    "type": "string"
+                                },
+                                "token": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "in": "cookie",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "summary": "Modifica dati utente, è necessario fornire un token di autenticazione valido, verranno modificati i parametri inviati con la richiesta, è necessario compilare solo quelli che si vuole modificare.",
+                "responses": {
+                    "200": {
+                        "description": "Modifiche avvenute con successo.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": true,
+                                "message": "modifica avvenuta con successo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Non sono stati specificati parametri da modificare.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "Non sono stati specificati parametri da modificare"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "token di autenticazione non fornito o non valido, il caso è specificato in 'message'",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "token non fornito"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Lo username è già in uso.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "username non valido, eventuali altri dati sono stati modificati"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "è avvenuto un errore sul server",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                }
+
+            },
+            "delete": {
+                "tags": [
+                    "user"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "token",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "token": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "in": "cookie",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "summary": "Elimina l'utente associato al token passato, se dovessi mandare due diversi token validi uno nel body e uno nel cookie viene eliminato l'utente associato al token passato nel body.\nE' necessario l'invio di un solo token.",
+                "responses": {
+                    "200": {
+                        "description": "Utente eliminato con successo",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": true,
+                                "message": "utente eliminato con successo"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token di autenticazione non fornito o non valido, il caso è specificato in 'message'",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "token non valido"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "E' avvenuto un errore sul server",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/getmany": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "parameters": [{
+                    "in": "query",
+                    "name": "username",
+                    "schema": {
+                        "type": "string"
+                    }
+                }],
+                "summary": "Restituisci tutti gli utenti che contengono nello username la stringa passata come parametro",
+                "responses": {
+                    "200": {
+                        "description": "Gli utenti sono stati trovati e restituiti con successo",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/User"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Parametro username non specificato",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                              "success": {
+                                "type": "boolean"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["success", "message"]
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "query error"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Il server non è riuscito a recuperare gli utenti",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                              "success": {
+                                "type": "boolean"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["success", "message"]
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/signUp": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "userdata",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "username": {
+                                    "type": "string"
+                                },
+                                "email": {
+                                    "type": "string"
+                                },
+                                "password": {
+                                    "type": "string"
+                                },
+                                "nome": {
+                                    "type": "string"
+                                },
+                                "cognome": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "summary": "Registra un nuovo utente",
+                "responses": {
+                    "200": {
+                        "description": "La registrazione è avvenuta con successo",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": true,
+                                "message": "registrazione avvenuta"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Mancano uno o più parametri",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "parametri mancanti"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "La mail ha un formato non valido, oppure la mail o lo username sono già in uso, oppure la password non rispetta i requisiti di sicurezza.\n Nel primo caso message vale 'email non valida', nel secondo vale 'username o email già in uso', nel terzo vale 'la password non rispetta i requisiti di sicurezza'",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "username o email già in uso"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "E' avvenuto un errore",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/addPref": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "consumes": ["application/json", "x-www-form-urlencoded"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "optofollow",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "token": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "in": "cookie",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "summary": "Aggiungi un'opera ai preferiti, è necessario fornire un token di autenticazione valido",
+                "responses": {
+                    "200": {
+                        "description": "L'opera è stata aggiunta ai preferiti con successo",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": true,
+                                "message": "operazione avvenuta con successo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "id opera non fornito",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "id opera non fornito"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "token di autenticazione non fornito o non valido, il caso è specificato in 'message'",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "token non valido"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "non puoi seguire quest'opera",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "non puoi seguire quest'opera"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "l'opera non esiste",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "l'opera non esiste"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "l'id dell'opera deve essere una stringa di 12 bytes",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "L'id deve essere una stringa di 12 bytes o un intero"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "è avvenuto un errore sul server",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                }
+
+            }
+        },
+        "/api/user/remPref": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "consumes": ["application/json", "x-www-form-urlencoded"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "optounfollow",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "token": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "in": "cookie",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "summary": "Rimuovi un'opera dai preferiti, è necessario fornire un token di autenticazione valido.",
+                "responses": {
+                    "200": {
+                        "description": "L'operazione è avvenuta con successo, se l'opera era tra quelle seguite dall'utente allora è stata rimossa dalle opere seguite.\nIn message è specificato se l'opera era tra le seguite dall'utente o meno.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": true,
+                                "message": "l'opera è stata rimossa dalle opere che segui"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "id opera non fornito",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "id opera non fornito"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "token di autenticazione non fornito o non valido, il caso è specificato in 'message'",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "token non valido"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "l'opera non esiste",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "l'opera non esiste"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "l'id dell'opera deve essere una stringa di 12 bytes",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "L'id deve essere una stringa di 12 bytes o un intero"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "è avvenuto un errore sul server",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                }
+
+            }
+        },
+        "/api/auth": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "consumes": ["application/json", "x-www-form-urlencoded"],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "credentials",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "email": {
+                                    "type": "string"
+                                },
+                                "password": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "summary": "Permette all'utente di autenticarsi, la risposta contiene anche un cookie 'token' contenente il jwt",
+                "responses": {
+                    "200": {
+                        "description": "L'autenticazione è avvenuta correttamente",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "token": {
+                                    "type": "string"
+                                },
+                                "user": {
+                                    "$ref": "#/definitions/User"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Email e/o password non specificate.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "email e/o password non specificate"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Email o password errate, oppure indirizzo email non verificato, il caso è specificato in 'message'.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "email o password errate"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "E' avvenuto un errore sul server.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                } 
+            }
+        },
+        "/api/opera": {
+            "get": {
+                "tags": [
+                    "opera"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "cookie",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "summary": "Permette all'utente di recuperare un'opera",
+                "responses": {
+                    "200": {
+                        "description": "L'opera è stata recuperata con successo, se non sei l'autore dell'opera ma l'opera ha visibilità pubblica non ti verranno inviati i capitoli con visibilità privata",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "data": {
+                                    "$ref": "#/definitions/Opera"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "L'id dell'opera non è stato specificato",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "non è stato specificato il parametro id"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "L'opera richiesta ha visibilità privata e il token inviato non è valido",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "token non valido"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "L'opera ha visibilità privata e: o non è stato fornito un token di autenticazione o (il caso è specificato in 'message') questo è stato fornito, è valido, ma non si è comunque autorizzati a visualizzare l'opera (non se ne è l'autore)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "non puoi visualizzare quest'opera"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "L'opera non esiste",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "l'opera non esiste"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "L'id dell'opera non è una stringa di 12 bytes",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "L'id deve essere una stringa di 12 bytes o un intero"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "E' avvenuto un errore sul server.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                } 
+            },
+            "post": {
+                "tags": [
+                    "opera"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "datiOpera",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "titolo": {
+                                    "type": "string"
+                                },
+                                "sinossi": {
+                                    "type": "string"
+                                },
+                                "generi": {
+                                    "type": "string"
+                                },
+                                "token": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "in": "cookie",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "summary": "Permette all'utente di creare un'opera, l'opera avrà come autore l'utente associato al token inviato, i generi sono vanno specificati tutti nella stringa 'generi' separati da spazi",
+                "responses": {
+                    "200": {
+                        "description": "L'opera è stata creata con successo",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "id": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": true,
+                                "message": "creazione opera avvenuta con successo",
+                                "id": "4jf83kd84kf8"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Mancano uno o più parametri",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "mancano uno o più parametri"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token di autenticazione non fornito o non valido, il caso è specificato in 'message'",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "token non valido"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "L'utente ha già un'opera con lo stesso titolo, non puoi avere due opere con lo stesso titolo",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "Esiste già un'opera con lo stesso titolo"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "E' avvenuto un errore sul server.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                } 
+            },
+            "patch": {
+                "tags": [
+                    "opera"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "datatomodify",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "titolo": {
+                                    "type": "string"
+                                },
+                                "sinossi": {
+                                    "type": "string"
+                                },
+                                "visibile": {
+                                    "type": "boolean"
+                                },
+                                "id": {
+                                    "type": "string"
+                                },
+                                "token": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "in": "cookie",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "summary": "Modifica dati opera, è necessario fornire un token di autenticazione valido, verranno modificati i parametri inviati con la richiesta, è necessario compilare solo quelli che si vuole modificare.",
+                "responses": {
+                    "200": {
+                        "description": "Modifiche avvenute con successo.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": true,
+                                "message": "modifica avvenuta con successo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Non sono stati specificati parametri da modificare.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "Non sono stati specificati parametri da modificare"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "token di autenticazione non fornito o non valido, il caso è specificato in 'message'",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "token non fornito"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Il titolo è già in uso o l'opera non può essere modificata perchè non appartiene all'utente associato al token inviato, il caso è specificato in 'message'",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "non puoi modificare un'opera non tua"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Impossibile trovare l'opera",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "impossibile trovare l'opera"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "l'id dell'opera deve essere una stringa di 12 bytes",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "L'id deve essere una stringa di 12 bytes o un intero"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "è avvenuto un errore sul server",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "opera"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "token": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "in": "cookie",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "summary": "Elimina l'opera associata all'id passato, ma solo se il token passato è associato all'autore dell'opera",
+                "responses": {
+                    "200": {
+                        "description": "Opera eliminata con successo",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": true,
+                                "message": "opera eliminata con successo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Id dell'opera non specificato",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "id opera non specificato"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token di autenticazione non fornito o non valido, il caso è specificato in 'message'",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "token non valido"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Non puoi eliminare l'opera perchè non appartiene a te",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "non puoi eliminare un'opera che non appartiene a te"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Opera non trovata",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "opera non trovata"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "l'id dell'opera deve essere una stringa di 12 bytes",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "L'id deve essere una stringa di 12 bytes o un intero"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "E' avvenuto un errore sul server",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/opera/getmany": {
+            "get": {
+                "tags": [
+                    "opera"
+                ],
+                "parameters": [{
+                    "in": "query",
+                    "name": "titolo",
+                    "schema": {
+                        "type": "string"
+                    }
+                }],
+                "summary": "Restituisci tutte le opere con visibilità pubblica che contengono nel titolo la stringa passata come parametro",
+                "responses": {
+                    "200": {
+                        "description": "Le opere sono state trovate e restituite con successo",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/Opera"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Parametro titolo non specificato",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                              "success": {
+                                "type": "boolean"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["success", "message"]
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "query error"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Il server non è riuscito a recuperare le opere",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                              "success": {
+                                "type": "boolean"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["success", "message"]
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/opera/getmostsuccessful": {
+            "get": {
+                "tags": [
+                    "opera"
+                ],
+                "summary": "Restituisce le 20 opere con più seguaci",
+                "responses": {
+                    "200": {
+                        "description": "Le opere sono state trovate e restituite con successo",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/Opera"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Il server non è riuscito a recuperare le opere",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                              "success": {
+                                "type": "boolean"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["success", "message"]
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/capitolo": {
+            "get": {
+                "tags": [
+                    "capitolo"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "cookie",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "summary": "Permette all'utente di recuperare un capitolo",
+                "responses": {
+                    "200": {
+                        "description": "L'opera è stata recuperata con successo, se non sei l'autore dell'opera ma l'opera ha visibilità pubblica non ti verranno inviati i capitoli con visibilità privata",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "data": {
+                                    "$ref": "#/definitions/Opera"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "L'id del capitolo non è stato specificato",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "non è stato specificato il parametro id"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "L'opera richiesta ha visibilità privata e il token inviato non è valido",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "token non valido"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Il capitolo (o l'opera a cui appartiene) ha visibilità privata e: o non è stato fornito un token di autenticazione o (il caso è specificato in 'message') questo è stato fornito, è valido, ma non si è comunque autorizzati a visualizzare l'opera (non se ne è l'autore)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "non puoi visualizzare questo capitolo"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Il capitolo non esiste",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "il capitolo non esiste"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "L'id del capitolo non è una stringa di 12 bytes",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "L'id deve essere una stringa di 12 bytes o un intero"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "E' avvenuto un errore sul server.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                } 
+            },
+            "post": {
+                "tags": [
+                    "capitolo"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "datiCapitolo",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "titolo": {
+                                    "type": "string"
+                                },
+                                "testo": {
+                                    "type": "string"
+                                },
+                                "id": {
+                                    "type": "string"
+                                },
+                                "token": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "in": "cookie",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "summary": "Permette all'utente di creare un capitolo, id è l'id dell'opera a cui si vuole aggiungere il capitolo, l'opera deve appartenere all'utente loggato",
+                "responses": {
+                    "200": {
+                        "description": "Il capitolo è stato creato con successo",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": true,
+                                "message": "chapter successfully created"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Mancano uno o più parametri",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "mancano uno o più parametri"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token di autenticazione non fornito o non valido, il caso è specificato in 'message'",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "token non valido"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "L'opera ha già un capitolo con lo stesso titolo oppure l'opera avente l'id specificato non appartiene all'utente associato al token inviato, il caso è specificato in 'message'",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "un altro capitolo appartenente alla stessa opera ha lo stesso titolo"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "L'opera associata all'id specificato non esiste",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "L'opera specificata non esiste"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "l'id dell'opera deve essere una stringa di 12 bytes",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "L'id deve essere una stringa di 12 bytes o un intero"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "E' avvenuto un errore sul server.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                } 
+            },
+            "patch": {
+                "tags": [
+                    "capitolo"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "datatomodify",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "titolo": {
+                                    "type": "string"
+                                },
+                                "testo": {
+                                    "type": "string"
+                                },
+                                "visibile": {
+                                    "type": "boolean"
+                                },
+                                "id": {
+                                    "type": "string"
+                                },
+                                "token": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "in": "cookie",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "summary": "Modifica dati capitolo, è necessario fornire un token di autenticazione valido, verranno modificati i parametri inviati con la richiesta, è necessario compilare solo quelli che si vuole modificare.",
+                "responses": {
+                    "200": {
+                        "description": "Modifiche avvenute con successo.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": true,
+                                "message": "modifica avvenuta con successo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Non sono stati specificati parametri da modificare.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "Non sono stati specificati parametri da modificare"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "token di autenticazione non fornito o non valido, il caso è specificato in 'message'",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "token non fornito"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Il titolo non è valido (un altro capitolo nella stessa opera ha lo stesso titolo) oppure stai cercando di modificare un capitolo appartenente a un'opera non tua",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "titolo non valido, eventuali altri dati sono stati modificati"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Capitolo non trovato",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "capitolo non trovato"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "l'id del capitolo deve essere una stringa di 12 bytes",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "L'id deve essere una stringa di 12 bytes o un intero"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "è avvenuto un errore sul server",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "capitolo"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "token": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "in": "cookie",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "summary": "Elimina il capitolo associato all'id passato, ma solo se il token passato è associato all'autore dell'opera a cui appartiene il capitolo",
+                "responses": {
+                    "200": {
+                        "description": "Capitolo eliminato con successo",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": true,
+                                "message": "capitolo eliminato con successo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Id del capitolo non specificato",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "id capitolo non specificato"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token di autenticazione non fornito o non valido, il caso è specificato in 'message'",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "token non fornito"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Non puoi eliminare il capitolo perchè l'opera di cui è parte non appartiene a te",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "non puoi eliminare un capitolo che non appartiene a una tua opera"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Capitolo non trovato",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "capitolo non trovato"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "l'id del capitolo deve essere una stringa di 12 bytes",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "L'id deve essere una stringa di 12 bytes o un intero"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "E' avvenuto un errore sul server",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/checkEmail": {
+            "get": {
+                "tags": [
+                    "checkEmail"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "mctoken",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "summary": "Permette all'utente di inviare il token ricevuto via mail per verificare che lo stesso abbia accesso alla casella di posta elettronica",
+                "responses": {
+                    "200": {
+                        "description": "Token verificato con successo",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": true,
+                                "message": "email verificata con successo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Il parametro mctoken non è stato specificato",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "parametro mctoken non specificato"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Il token inviato non è valido",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "token non valido"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "E' avvenuto un errore sul server",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "success": false,
+                                "message": "è avvenuto un errore"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    "definitions": {
+        "User": {
+            "required": [
+                "_id",
+                "username",
+                "nome",
+                "cognome",
+                "opereProdotte",
+                "operePreferite"
+            ],
+            "properties": {
+                "_id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "nome": {
+                    "type": "string"
+                },
+                "cognome": {
+                    "type": "string"
+                },
+                "opereProdotte": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Opera"
+                    }
+                },
+                "operePreferite": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Opera"
+                    }
+                }
+            }
+        },
+        "Opera": {
+            "required": [
+                "_id",
+                "titolo",
+                "generi",
+                "autore",
+                "autoreId",
+                "sinossi",
+                "nSeguaci",
+                "listaCap",
+                "visibile"
+            ],
+            "properties": {
+                "_id": {
+                    "type": "string"
+                },
+                "titolo": {
+                    "type": "string"
+                },
+                "generi": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "autore": {
+                    "type": "string"
+                },
+                "autoreId": {
+                    "type": "string"
+                },
+                "sinossi": {
+                    "type": "string"
+                },
+                "nSeguaci": {
+                    "type": "number"
+                },
+                "listaCap": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Capitolo"                        
+                    }
+                },
+                "visibile": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "Capitolo": {
+            "required": [
+                "titolo",
+                "operaId",
+                "numero",
+                "testo",
+                "visibile"
+            ],
+            "properties": {
+                "titolo": {
+                    "type": "string"
+                },
+                "operaId": {
+                    "type": "string"
+                },
+                "numero": {
+                    "type": "number"
+                },
+                "testo": {
+                    "type": "string"
+                },
+                "visibile": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,6 @@
+secrets.env
+node_modules
+coverage
+.vscode/*
+!.vscode/extensions.json
+.idea
